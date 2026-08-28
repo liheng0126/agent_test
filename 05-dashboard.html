@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⑤ 质量看板 · 大模型评测体系</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 六大核心节点 / ⑤ 质量看板</div>
+      <h1>⑤ 质量看板 <span class="tag blue">L4 度量运营层</span></h1>
+      <p class="sub">对应职责「搭建质量看板，跟踪效果、稳定性、成本、延迟和安全相关指标」：把分散在评测结果库、线上监控、成本日志中的数据汇聚成「一屏看全貌」的质量驾驶舱，服务日常跟进与管理层汇报。</p>
+    </div>
+
+    <!-- 五维 -->
+    <div class="card">
+      <h2>五维质量模型（看板信息架构）</h2>
+      <div class="grid cols-5" style="grid-template-columns:repeat(5,1fr);">
+        <div class="mini-card" style="border-top:3px solid var(--primary-light);">
+          <h3 style="justify-content:flex-start;">✨ 效果</h3>
+          <p>正确率、幻觉率、任务完成率、bad case 率、用户点踩率</p>
+        </div>
+        <div class="mini-card" style="border-top:3px solid var(--blue);">
+          <h3 style="justify-content:flex-start;">📈 稳定性</h3>
+          <p>同题输出方差、服务可用性、错误率、失败恢复率</p>
+        </div>
+        <div class="mini-card" style="border-top:3px solid var(--violet);">
+          <h3 style="justify-content:flex-start;">💰 成本</h3>
+          <p>Token 成本、单任务成本、成本环比、缓存命中率</p>
+        </div>
+        <div class="mini-card" style="border-top:3px solid var(--warn);">
+          <h3 style="justify-content:flex-start;">⏱️ 延迟</h3>
+          <p>TTFT P50/P90/P99、端到端耗时、超时率</p>
+        </div>
+        <div class="mini-card" style="border-top:3px solid var(--danger);">
+          <h3 style="justify-content:flex-start;">🛡️ 安全</h3>
+          <p>拦截率、越狱成功率、PII 泄露、安全巡检结果</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 看板模拟界面 -->
+    <div class="card">
+      <h2>看板首页（示意 Demo 数据）</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;">线上版本 <span class="pill t">app-2.5.0</span> vs 基线 <span class="pill b">app-2.4.1</span> · 数据时间：最近 7 天</p>
+      <div class="grid cols-4">
+        <div class="mini-card kpi">
+          <div class="v" data-count="93.2" data-suffix="%" data-decimals="1">0%</div>
+          <div class="l">核心场景正确率 <span class="delta up">▲ 1.8pp</span></div>
+          <div class="bar"><i style="width:93.2%"></i></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="1.6" data-suffix="%" data-decimals="1">0%</div>
+          <div class="l">幻觉率（目标 ≤2%）<span class="delta up">▼ 0.4pp</span></div>
+          <div class="bar"><i style="width:16%;background:var(--ok)"></i></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="86.5" data-suffix="%" data-decimals="1">0%</div>
+          <div class="l">Agent 任务完成率 <span class="delta up">▲ 3.2pp</span></div>
+          <div class="bar"><i style="width:86.5%"></i></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="0.38" data-suffix="元" data-decimals="2">0元</div>
+          <div class="l">单任务平均成本 <span class="delta down">▲ 12%（超阈值）</span></div>
+          <div class="bar"><i style="width:70%;background:var(--danger)"></i></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="1.2" data-suffix="s" data-decimals="1">0s</div>
+          <div class="l">TTFT P90 <span class="delta up">▼ 0.2s</span></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="99.95" data-suffix="%" data-decimals="2">0%</div>
+          <div class="l">服务可用性（SLA 99.9%）</div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="99.7" data-suffix="%" data-decimals="1">0%</div>
+          <div class="l">安全拦截率 <span class="delta up">▲ 0.3pp</span></div>
+        </div>
+        <div class="mini-card kpi">
+          <div class="v" data-count="47" data-suffix=" 例">0 例</div>
+          <div class="l">本周新增 Bad Case <span class="delta down">▲ 9 例</span></div>
+          <div class="bar"><i style="width:55%;background:var(--warn)"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 趋势图 -->
+    <div class="card">
+      <h2>版本趋势视图（效果指标近 6 版走势）</h2>
+      <div style="display:flex;align-items:flex-end;gap:18px;height:180px;padding:10px 6px 0;">
+        <div style="flex:1;text-align:center;"><div style="height:96px;background:linear-gradient(180deg,#99f6e4,#5eead4);border-radius:8px 8px 0 0;"></div><b style="font-size:12px;">2.0.0</b><br><small style="color:var(--muted);font-size:11px;">88.1%</small></div>
+        <div style="flex:1;text-align:center;"><div style="height:104px;background:linear-gradient(180deg,#99f6e4,#5eead4);border-radius:8px 8px 0 0;"></div><b style="font-size:12px;">2.1.0</b><br><small style="color:var(--muted);font-size:11px;">89.0%</small></div>
+        <div style="flex:1;text-align:center;"><div style="height:99px;background:linear-gradient(180deg,#99f6e4,#5eead4);border-radius:8px 8px 0 0;"></div><b style="font-size:12px;">2.2.0</b><br><small style="color:var(--muted);font-size:11px;">88.7%</small></div>
+        <div style="flex:1;text-align:center;"><div style="height:118px;background:linear-gradient(180deg,#99f6e4,#2dd4bf);border-radius:8px 8px 0 0;"></div><b style="font-size:12px;">2.3.0</b><br><small style="color:var(--muted);font-size:11px;">90.2%</small></div>
+        <div style="flex:1;text-align:center;"><div style="height:127px;background:linear-gradient(180deg,#99f6e4,#2dd4bf);border-radius:8px 8px 0 0;"></div><b style="font-size:12px;">2.4.1</b><br><small style="color:var(--muted);font-size:11px;">91.4%</small></div>
+        <div style="flex:1;text-align:center;"><div style="height:140px;background:linear-gradient(180deg,#5eead4,#0f766e);border-radius:8px 8px 0 0;box-shadow:var(--shadow);"></div><b style="font-size:12px;color:var(--primary);">2.5.0</b><br><small style="color:var(--primary);font-weight:700;font-size:11px;">93.2%</small></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin-top:12px;">看板同时支持：按场景下钻（每个核心场景独立趋势）、按被测维度切片（模型/Prompt/策略/版本）、历史任意两个版本 A/B 对比、bad case 类型堆叠趋势。</p>
+    </div>
+
+    <!-- 数据链路 + 告警 -->
+    <div class="card">
+      <h2>数据链路与告警机制</h2>
+      <div class="grid cols-2">
+        <div>
+          <div class="flow" style="flex-direction:column;gap:8px;">
+            <div class="stage" style="margin:0;text-align:left;"><b>① 数据源</b><span>评测平台结果库 · 线上网关日志 · 成本账单 · 用户反馈系统</span></div>
+            <div class="stage" style="margin:0;text-align:left;"><b>② 数仓加工</b><span>ETL 清洗 → 指标口径统一计算（复用指标字典）→ 聚合层</span></div>
+            <div class="stage" style="margin:0;text-align:left;"><b>③ 看板呈现</b><span>总览驾驶舱 / 场景下钻 / 版本对比 / Bad Case 追踪 四大视图</span></div>
+            <div class="stage" style="margin:0;text-align:left;"><b>④ 行动出口</b><span>订阅报告（周报/发版报告）→ 告警 → 工单闭环</span></div>
+          </div>
+        </div>
+        <div>
+          <table class="tbl">
+            <tr><th>告警项</th><th>触发条件</th><th>响应</th></tr>
+            <tr><td>核心指标跌破门槛</td><td>正确率 &lt; 门槛值 或幻觉率 &gt; 红线</td><td><span class="pill r">P0 电话告警</span></td></tr>
+            <tr><td>回归集通过率下降</td><td>历史 bad case 复发率 &gt; 5%</td><td><span class="pill y">P1 即时消息</span></td></tr>
+            <tr><td>成本异常</td><td>单任务成本环比 +10%</td><td><span class="pill y">P1 即时消息</span></td></tr>
+            <tr><td>延迟劣化</td><td>TTFT P90 环比 +30%</td><td><span class="pill b">P2 日报</span></td></tr>
+            <tr><td>安全巡检异常</td><td>红线集任一失守</td><td><span class="pill r">P0 电话告警</span></td></tr>
+          </table>
+          <div class="callout" style="margin-top:16px;">
+            💡 看板的核心价值不是「展示」而是「驱动行动」：每个异常指标都能一键关联到 bad case 明细与对应工单，形成「看到 → 查明 → 修掉 → 验证」的完整路径。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pager">
+      <a href="04-annotation.html"><span>← 上一节点</span><b>④ 人工标注与误差分析</b></a>
+      <a class="next" href="06-release-gate.html"><span>下一节点 →</span><b>⑥ 上线门槛与发布验收</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

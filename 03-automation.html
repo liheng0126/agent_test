@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>③ 自动化评测与回归 · 大模型评测体系</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 六大核心节点 / ③ 自动化评测与回归</div>
+      <h1>③ 自动化评测与回归 <span class="tag">L2 执行引擎层</span></h1>
+      <p class="sub">对应职责「建设自动化评测能力，支持模型、prompt、Agent 策略和产品版本对比」：以评测平台为载体，把「跑评测」变成像 CI 一样的基础设施——一键触发、自动执行、结果可比。</p>
+    </div>
+
+    <!-- 平台架构 -->
+    <div class="card">
+      <h2>评测平台技术架构</h2>
+      <div class="arch">
+        <div class="layer">
+          <div class="layer-name" style="background:#0f766e;">接入层<small>Entry</small></div>
+          <div class="layer-body">
+            <span class="node">Web 控制台（发起任务/看报告）</span>
+            <span class="node">OpenAPI / SDK（Python）</span>
+            <span class="node">CI 集成（Jenkins/GitLab 触发器）</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#1d4ed8;">调度层<small>Orchestrator</small></div>
+          <div class="layer-body">
+            <span class="node">评测任务编排（DAG）</span>
+            <span class="node">并发 / 限流 / 重试</span>
+            <span class="node">缓存（同输入命中跳过）</span>
+            <span class="node">多模型路由（LiteLLM）</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#6d28d9;">执行层<small>Runner</small></div>
+          <div class="layer-body">
+            <span class="node">被测对象适配器（模型/API/Agent/产品端）</span>
+            <span class="node">Agent 沙箱执行器（工具/浏览器/代码）</span>
+            <span class="node">轨迹采集器（步骤/工具调用/耗时）</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#b45309;">评测器层<small>Evaluators</small></div>
+          <div class="layer-body">
+            <span class="node">规则评测器（格式/关键词/正则/SQL 断言）</span>
+            <span class="node">传统指标（BLEU/ROUGE/精确匹配）</span>
+            <span class="node">LLM-as-Judge（打分/成对比较/事实核查）</span>
+            <span class="node">多模态评测器（VLM Judge）</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#334155;">存储分析层<small>Storage</small></div>
+          <div class="layer-body">
+            <span class="node">评测结果库（PostgreSQL）</span>
+            <span class="node">明细样本存储（对象存储）</span>
+            <span class="node">追踪分析（Langfuse）</span>
+            <span class="node">看板数据服务</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评测器矩阵 -->
+    <div class="card">
+      <h2>评测器选型矩阵（什么指标用什么评）</h2>
+      <table class="tbl">
+        <tr><th>评测器类型</th><th>适用指标</th><th>优点</th><th>局限与对策</th></tr>
+        <tr>
+          <td><span class="pill t">规则 / 代码</span></td>
+          <td>格式合规、JSON 可解析、工具参数合法、敏感词命中、延迟成本</td>
+          <td>零成本、100% 可靠、可复现</td>
+          <td>只能覆盖结构性质量 → 作为所有任务的<b>前置闸门</b></td>
+        </tr>
+        <tr>
+          <td><span class="pill t">传统指标</span></td>
+          <td>有标准答案的场景：精确匹配、ROUGE、检索命中率</td>
+          <td>客观、快</td>
+          <td>对开放式生成区分度低 → 限定在有参考答案的数据集</td>
+        </tr>
+        <tr>
+          <td><span class="pill t">LLM-as-Judge</span></td>
+          <td>正确性、相关性、幻觉判定、风格、成对偏好</td>
+          <td>可规模化覆盖主观维度</td>
+          <td>存在偏置（位置/长度/自我偏好）→ 见下方校准机制</td>
+        </tr>
+        <tr>
+          <td><span class="pill t">人工标注</span></td>
+          <td>高价值 / 高争议 / Judge 不确定样本</td>
+          <td>金标准</td>
+          <td>贵且慢 → 只做抽样校准与仲裁（见节点④）</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 回归流水线 -->
+    <div class="card">
+      <h2>三层回归防线（Regression Strategy）</h2>
+      <div class="grid cols-3">
+        <div class="mini-card">
+          <h3><span class="icon">⚡</span>防线一：Commit 级（冒烟）</h3>
+          <p>触发：Prompt / 策略代码提交。跑<b>小规模哨兵集（约 300 条）</b>，5~10 分钟出结果，P0 指标跌破基线立即阻断合并。追求「快」。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">📦</span>防线二：版本级（全量）</h3>
+          <p>触发：候选版本构建 / 发版前。跑<b>全部评测集 + bad case 回归集</b>，生成完整评测报告与版本对比，作为上线门槛输入。追求「全」。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">🛰️</span>防线三：线上巡检</h3>
+          <p>触发：定时（小时级）。对线上环境跑<b>金标巡检集</b>，监控效果与延迟漂移，异常自动告警并可触发熔断。追求「稳」。</p>
+        </div>
+      </div>
+      <pre class="code" style="margin-top:16px;"><span class="c"># 评测任务配置示例（平台 YAML）</span>
+<span class="k">task</span>: release-gate-app-2.5.0
+<span class="k">trigger</span>: pre_release          <span class="c"># commit | pre_release | cron | manual</span>
+<span class="k">candidates</span>:
+  - <span class="k">type</span>: model,    <span class="k">ref</span>: <span class="s">"gpt-x-2026-08"</span>
+  - <span class="k">type</span>: model,    <span class="k">ref</span>: <span class="s">"internal-llm-v9"</span>      <span class="c"># 对比模型</span>
+  - <span class="k">type</span>: prompt,   <span class="k">ref</span>: <span class="s">"agent_planner@v14..v16"</span> <span class="c"># 对比 prompt 版本</span>
+  - <span class="k">type</span>: agent_strategy, <span class="k">ref</span>: <span class="s">"react | plan_execute"</span> <span class="c"># 对比 Agent 策略</span>
+<span class="k">datasets</span>: [core_qa_v12, agent_task_v8, regression_badcase_all]
+<span class="k">evaluators</span>: [rule_gate, llm_judge_v3, trajectory_check]
+<span class="k">repeat</span>: 3                    <span class="c"># 同输入多次采样，测稳定性</span>
+<span class="k">report</span>: { <span class="k">compare_baseline</span>: app-2.4.1, <span class="k">publish</span>: dashboard }</pre>
+    </div>
+
+    <!-- 版本对比 -->
+    <div class="card">
+      <h2>四维版本对比能力</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;">同一份评测结果库，支持按四个维度任意切片对比，输出「谁更好、好在哪、哪些 case 翻转」：</p>
+      <table class="tbl">
+        <tr><th>对比维度</th><th>典型问题</th><th>输出物</th></tr>
+        <tr><td><strong>模型对比</strong></td><td>新模型 vs 线上模型，值不值得换？成本增加多少？</td><td>指标对比表 + 翻转 case 清单 + 成本差</td></tr>
+        <tr><td><strong>Prompt 对比</strong></td><td>Prompt v16 是否解决了角色漂移？有没有引入新问题？</td><td>逐指标增减 + 回归集通过率变化</td></tr>
+        <tr><td><strong>Agent 策略对比</strong></td><td>ReAct vs Plan-and-Execute 哪个任务完成率更高？步数效率呢？</td><td>成功率 / 平均步数 / 工具调用对比</td></tr>
+        <tr><td><strong>产品版本对比</strong></td><td>App 2.5.0 相比 2.4.1 端到端质量是升是降？</td><td>基线对比报告 + 门槛校验结果</td></tr>
+      </table>
+    </div>
+
+    <!-- Judge 校准 -->
+    <div class="card">
+      <h2>LLM-as-Judge 校准机制（保证自动评测可信）</h2>
+      <div class="grid cols-2">
+        <div>
+          <ul class="clean">
+            <li><strong>金标集校准：</strong>维护人工标注的金标集，Judge 上线前与其对齐，一致率 ≥ 90% 才可投产；每月复检防漂移。</li>
+            <li><strong>去偏设计：</strong>成对比较随机交换位置消除位置偏置；长度归一化提示消除长度偏好；答案匿名化消除模型自我偏好。</li>
+            <li><strong>不确定兜底：</strong>Judge 输出置信度，低置信样本自动转人工标注队列，避免「错得安静」。</li>
+            <li><strong>证据链要求：</strong>Judge 必须输出 evidence_span（判定依据原文），便于人工抽检时快速复核。</li>
+          </ul>
+        </div>
+        <div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;">
+            <div class="mini-card kpi"><div class="v" data-count="91" data-suffix="%">0%</div><div class="l">Judge 与人工标注一致率</div><div class="bar"><i style="width:91%"></i></div></div>
+            <div class="mini-card kpi"><div class="v" data-count="8" data-suffix="%">0%</div><div class="l">转人工的低置信样本占比</div><div class="bar"><i style="width:8%;background:var(--warn)"></i></div></div>
+            <div class="mini-card kpi"><div class="v" data-count="85" data-suffix="%">0%</div><div class="l">评测执行自动化率</div><div class="bar"><i style="width:85%"></i></div></div>
+            <div class="mini-card kpi"><div class="v" data-count="30" data-suffix="min">0min</div><div class="l">冒烟回归平均耗时</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pager">
+      <a href="02-benchmark.html"><span>← 上一节点</span><b>② Benchmark 与 Bad Case 库</b></a>
+      <a class="next" href="04-annotation.html"><span>下一节点 →</span><b>④ 人工标注与误差分析</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

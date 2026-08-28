@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>④ 人工标注与误差分析 · 大模型评测体系</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 六大核心节点 / ④ 人工标注与误差分析</div>
+      <h1>④ 人工标注与误差分析 <span class="tag violet">L3 分析归因层</span></h1>
+      <p class="sub">对应职责「组织人工标注、质量抽检、误差分析和问题归因」：人工判断是整个体系的「金标准」，负责校准自动评测器、仲裁争议样本，并把评测失败转化为可执行的改进结论。</p>
+    </div>
+
+    <div class="callout">
+      🎯 人工介入的三个定位：<b>① 校准者</b>（为 LLM-as-Judge 提供对齐金标）、<b>② 仲裁者</b>（处理自动评测的分歧与低置信样本）、<b>③ 分析师</b>（对失败样本做深度归因）。人工资源贵，必须用在刀刃上。
+    </div>
+
+    <!-- 标注体系 -->
+    <div class="card">
+      <h2>标注体系设计</h2>
+      <div class="grid cols-3">
+        <div class="mini-card">
+          <h3><span class="icon">📋</span>标注规范（Guideline）</h3>
+          <p>每类任务编写标注手册：维度定义、评分锚点（每个分值的正反例）、边界情况裁决规则。规范版本化管理，每次校准会后的修订全员同步。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">🔤</span>标注任务类型</h3>
+          <p><b>打分式</b>（单答案 1-5 分，评正确性/相关性等）；<b>对比式</b>（A/B 两答案选优或平局，更适合感知细微差异）；<b>分类式</b>（bad case 问题类型归档）；<b>抽取式</b>（标注 evidence 依据片段）。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">🎯</span>金标集（Golden Set)</h3>
+          <p>由资深标注员 + 算法同学共建的高置信度基准集（约 500 条/维度），用途：Judge 校准、标注员考核、回归哨兵。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 标注流程 -->
+    <div class="card">
+      <h2>标注流程与质量控制</h2>
+      <div class="grid cols-2">
+        <div>
+          <ol class="steps">
+            <li><strong>任务构造</strong>从评测结果库自动抽取待标注样本：Judge 低置信样本、成对评测分歧样本、新增场景抽样、线上负反馈。</li>
+            <li><strong>背靠背标注</strong>每条样本至少 3 人独立标注，互相不可见；埋入 5% 金标题实时监控标注员质量。</li>
+            <li><strong>一致性校验</strong>计算标注员间一致性（Cohen/Fleiss Kappa），Kappa ≥ 0.75 视为规范可执行；低于阈值先回炉校准再继续。</li>
+            <li><strong>仲裁</strong>分歧样本提交仲裁流程：3 人意见不一致时由资深标注员 / 算法同学裁决，裁决结果回写规范附录。</li>
+            <li><strong>质量抽检</strong>质检员对已提交标注按 10% 比例盲抽复核，错误率 &gt; 5% 的批次整批退回重标。</li>
+            <li><strong>结果入库</strong>标注结果回流评测结果库：校准 Judge、修正指标分数、沉淀为新金标 / bad case。</li>
+          </ol>
+        </div>
+        <div>
+          <table class="tbl">
+            <tr><th>质控指标</th><th>标准</th><th>当前水位</th></tr>
+            <tr><td>标注员间一致性 Kappa</td><td>≥ 0.75</td><td><span class="pill g">0.81</span></td></tr>
+            <tr><td>金标题准确率（个人）</td><td>≥ 95%</td><td><span class="pill g">97.2%</span></td></tr>
+            <tr><td>批次抽检错误率</td><td>≤ 5%</td><td><span class="pill g">2.8%</span></td></tr>
+            <tr><td>标注时效（打分任务）</td><td>≤ 24h / 千条</td><td><span class="pill g">18h</span></td></tr>
+            <tr><td>规范修订响应</td><td>分歧 → 修订 ≤ 3 天</td><td><span class="pill g">2.1 天</span></td></tr>
+          </table>
+          <div class="callout warn" style="margin-top:16px;">
+            ⚠️ 标注规范是<b>活的文档</b>：每条仲裁结论都要沉淀回规范附录（「边界情况案例集」），避免同一类分歧反复出现。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 误差分析 -->
+    <div class="card">
+      <h2>误差分析与问题归因方法（Error Analysis）</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;">评测回答「多差」，误差分析回答「为什么差、差在哪、怎么修」。四步分层下钻：</p>
+      <div class="flow">
+        <div class="stage"><div class="idx">1</div><b>失败样本圈定</b><span>自动评测 + 抽检确认</span></div>
+        <div class="stage"><div class="idx">2</div><b>类型归因</b><span>幻觉/遗忘/漂移/工具失败…</span></div>
+        <div class="stage"><div class="idx">3</div><b>分层下钻</b><span>按场景/难度/版本切片</span></div>
+        <div class="stage"><div class="idx">4</div><b>环节定位</b><span>定位到 prompt/检索/模型/工具</span></div>
+        <div class="stage"><div class="idx">5</div><b>改进闭环</b><span>Owner 认领 → 修复 → 回归</span></div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:18px;">
+        <div>
+          <table class="tbl">
+            <tr><th>问题类型</th><th>常见根因</th><th>对应改进手段</th></tr>
+            <tr><td>幻觉</td><td>知识缺失、检索未命中、过度生成</td><td>补知识库 / 加引用约束 / 拒答策略</td></tr>
+            <tr><td>上下文遗忘</td><td>窗口截断、关键信息位置偏远</td><td>压缩策略 / 信息前置 / 分轮摘要</td></tr>
+            <tr><td>角色漂移</td><td>系统提示弱化、长对话稀释</td><td>人设强化注入 / 周期性提醒</td></tr>
+            <tr><td>工具调用失败</td><td>参数 schema 理解错、接口变更</td><td>工具描述优化 / 参数校验重试</td></tr>
+            <tr><td>安全风险</td><td>越狱诱导、注入攻击</td><td>护栏升级 / 红线集回归</td></tr>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:14.5px;margin-bottom:10px;">某版本误差归因分布（示例）</h3>
+          <table class="tbl">
+            <tr><th>问题类型</th><th>占比</th><th></th></tr>
+            <tr><td>检索未命中 → 幻觉</td><td>34%</td><td><div class="bar"><i style="width:34%"></i></div></td></tr>
+            <tr><td>指令遵循偏差</td><td>22%</td><td><div class="bar"><i style="width:22%;background:var(--blue)"></i></div></td></tr>
+            <tr><td>工具调用失败</td><td>18%</td><td><div class="bar"><i style="width:18%;background:var(--violet)"></i></div></td></tr>
+            <tr><td>上下文遗忘</td><td>14%</td><td><div class="bar"><i style="width:14%;background:var(--warn)"></i></div></td></tr>
+            <tr><td>其他</td><td>12%</td><td><div class="bar"><i style="width:12%;background:var(--muted)"></i></div></td></tr>
+          </table>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:8px;">结论示例：34% 的失败源于检索环节而非模型本身 → 优先优化知识库分片与召回策略，而非换模型。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 闭环 -->
+    <div class="card">
+      <h2>问题闭环管理</h2>
+      <ul class="clean">
+        <li><strong>归因结论工单化：</strong>每个批量问题生成改进工单，明确 Owner、优先级（按 case 量 × 严重度排序）与验收标准（对应回归集指标）。</li>
+        <li><strong>周度误差分析会：</strong>评测、算法、平台、产品四方参加，过 Top 问题、拍板改进方案、回顾上周工单关闭率。</li>
+        <li><strong>复发现监控：</strong>已修复问题进入哨兵状态，回归集中持续监控 2 个版本周期，无复发才归档。</li>
+        <li><strong>知识沉淀：</strong>典型问题与归因结论沉淀为「质量知识库」，供 prompt 工程师和产品同学检索学习。</li>
+      </ul>
+      <div class="grid cols-3" style="margin-top:8px;">
+        <div class="mini-card kpi"><div class="v" data-count="78" data-suffix="%">0%</div><div class="l">归因结论 7 天内闭环率</div><div class="bar"><i style="width:78%"></i></div></div>
+        <div class="mini-card kpi"><div class="v" data-count="5" data-suffix="%">0%</div><div class="l">自动评测样本人工抽检比例</div></div>
+        <div class="mini-card kpi"><div class="v" data-count="6" data-suffix="%↓">0%</div><div class="l">问题复发率（连续两个版本）</div></div>
+      </div>
+    </div>
+
+    <div class="pager">
+      <a href="03-automation.html"><span>← 上一节点</span><b>③ 自动化评测与回归</b></a>
+      <a class="next" href="05-dashboard.html"><span>下一节点 →</span><b>⑤ 质量看板</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

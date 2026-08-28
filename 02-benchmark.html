@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>② Benchmark 与 Bad Case 库 · 大模型评测体系</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 六大核心节点 / ② Benchmark 与 Bad Case 库</div>
+      <h1>② Benchmark 与 Bad Case 库 <span class="tag">L1 数据资产层</span></h1>
+      <p class="sub">对应职责「设计并维护覆盖核心用户场景的 benchmark 和 bad case 库」：评测集是整个体系的「考卷」，其质量直接决定评测结论的可信度。核心思路：<b>分层构建 + 线上回流 + 持续保鲜</b>。</p>
+    </div>
+
+    <div class="callout">
+      🎯 建设原则：<b>评测集分布必须贴近真实流量分布</b>。一份离真实场景越来越远的评测集，分数再高也没有业务意义。通用学术 benchmark 只做参考基线，业务 benchmark 才是决策依据。
+    </div>
+
+    <!-- Benchmark 体系 -->
+    <div class="card">
+      <h2>分层 Benchmark 体系</h2>
+      <div class="grid cols-4">
+        <div class="mini-card">
+          <h3><span class="icon">🌍</span>L1 通用基线集</h3>
+          <p>引用学界公开 benchmark（MMLU、GSM8K、HumanEval 等）+ 内部通用能力集，用于模型选型与横向对比，约占 20%。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">🎯</span>L2 核心场景集</h3>
+          <p>覆盖 Top 核心用户场景（按流量 / 价值排序），每场景独立成集、独立看分，是上线决策的主要依据，约占 50%。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">🧨</span>L3 对抗与边界集</h3>
+          <p>越狱、注入、超长上下文、多轮诱导、语义陷阱、不可答问题（拒答测试）等边界能力，约占 15%。</p>
+        </div>
+        <div class="mini-card">
+          <h3><span class="icon">♻️</span>L4 回归 Bad Case 集</h3>
+          <p>线上真实问题回流沉淀，每条都「来路可查」，保证已修复问题不复发，约占 15% 且持续增长。</p>
+        </div>
+      </div>
+      <table class="tbl" style="margin-top:16px;">
+        <tr><th>评测集示例</th><th>场景</th><th>规模</th><th>难度分布</th><th>更新频率</th></tr>
+        <tr><td>core_qa_v12</td><td>核心问答 / RAG</td><td>3,200 条</td><td>易 40% / 中 40% / 难 20%</td><td>双周</td></tr>
+        <tr><td>agent_task_v8</td><td>Agent 多步任务</td><td>850 条</td><td>按步数 2~10 步分层</td><td>双周</td></tr>
+        <tr><td>multimodal_doc_v4</td><td>多模态文档理解</td><td>1,100 条</td><td>按文档类型分层</td><td>月度</td></tr>
+        <tr><td>safety_redline_v9</td><td>安全红线</td><td>1,500 条</td><td>按风险等级分层</td><td>周度</td></tr>
+        <tr><td>regression_badcase_all</td><td>历史问题回归</td><td>2,600 条（增长中）</td><td>按问题类型分层</td><td>持续回流</td></tr>
+      </table>
+    </div>
+
+    <!-- 评测集构建来源 -->
+    <div class="card">
+      <h2>评测集数据来源（四条生产线）</h2>
+      <div class="flow">
+        <div class="stage"><div class="idx">A</div><b>真实日志脱敏</b><span>线上采样 → 清洗 → 分层抽样</span></div>
+        <div class="stage"><div class="idx">B</div><b>人工构造</b><span>按场景 spec 编写 → 交叉评审</span></div>
+        <div class="stage"><div class="idx">C</div><b>模型合成</b><span>种子扩增 → LLM 生成 → 人工过滤</span></div>
+        <div class="stage"><div class="idx">D</div><b>问题回流</b><span>Bad Case / 用户反馈 → 复现入库</span></div>
+      </div>
+      <ul class="clean" style="margin-top:16px;">
+        <li><strong>真实日志线：</strong>按「场景 × 难度 × 用户类型」分层抽样，脱敏处理（去 PII），保留原始上下文，最贴近真实分布。</li>
+        <li><strong>人工构造线：</strong>依据产品场景规格（spec）编写，覆盖设计中的长尾分支；双人评审保证题面无歧义。</li>
+        <li><strong>模型合成线：</strong>用强模型对种子样本做改写 / 扩增（同义改写、难度升维、干扰注入），必须经人工质检过滤后才能入库。</li>
+        <li><strong>问题回流线：</strong>来自 bad case 库与线上告警，是回归防线的弹药来源（详见下方）。</li>
+      </ul>
+    </div>
+
+    <!-- Bad Case 库流程 -->
+    <div class="card">
+      <h2>Bad Case 库：收集 → 分类 → 复现 → 入库 → 回归</h2>
+      <ol class="steps">
+        <li><strong>收集</strong>五个来源：自动化评测失败样本、人工标注问题、用户负反馈（点踩/投诉）、客服工单、竞品对比落差。</li>
+        <li><strong>去重与归并</strong>按问题指纹（场景 + 问题类型 + 触发模式）归并，避免同一 pattern 的重复 case 稀释回归权重。</li>
+        <li><strong>复现与最小化</strong>确认在当前版本可复现，剥离无关信息形成最小复现单元（最小 prompt + 最小上下文）。</li>
+        <li><strong>分类打标</strong>标注问题类型（幻觉 / 上下文遗忘 / 角色漂移 / 工具调用失败 / 安全风险 / 格式错误…）、严重等级、影响场景。</li>
+        <li><strong>入库登记</strong>写入 bad case 库，关联：来源单号、版本号、复现脚本、期望行为、修复 Owner。</li>
+        <li><strong>回归闭环</strong>自动汇入 L4 回归集，在每个候选版本上重跑；修复确认后转入「哨兵观察」状态持续监控。</li>
+      </ol>
+      <div class="grid cols-2" style="margin-top:8px;">
+        <div>
+          <pre class="code"><span class="c"># bad case 库记录结构（JSON）</span>
+{
+  <span class="s">"case_id"</span>: <span class="s">"BC-2026-0812-0034"</span>,
+  <span class="s">"source"</span>: <span class="s">"user_feedback"</span>,      <span class="c"># 来源</span>
+  <span class="s">"scene"</span>: <span class="s">"core_qa"</span>,             <span class="c"># 所属场景</span>
+  <span class="s">"error_type"</span>: <span class="s">"hallucination"</span>,  <span class="c"># 问题类型</span>
+  <span class="s">"severity"</span>: <span class="s">"S1"</span>,               <span class="c"># S1致命 S2严重 S3一般</span>
+  <span class="s">"repro_version"</span>: <span class="s">"app-2.4.1"</span>,
+  <span class="s">"input"</span>: { ... },  <span class="s">"expected"</span>: { ... },
+  <span class="s">"status"</span>: <span class="s">"regression"</span>  <span class="c"># 已入回归集</span>
+}</pre>
+        </div>
+        <div>
+          <div class="grid" style="grid-template-columns:1fr 1fr;">
+            <div class="mini-card kpi"><div class="v" data-count="92" data-suffix="%">0%</div><div class="l">Bad Case 修复后回归拦截率</div><div class="bar"><i style="width:92%"></i></div></div>
+            <div class="mini-card kpi"><div class="v" data-count="48" data-suffix="h">0h</div><div class="l">S1 级 Case 从入库到回归集时效</div><div class="bar"><i style="width:75%"></i></div></div>
+            <div class="mini-card kpi"><div class="v" data-count="2600" data-suffix="+">0+</div><div class="l">累计沉淀回归 Case 总量</div></div>
+            <div class="mini-card kpi"><div class="v" data-count="15" data-suffix="%">0%</div><div class="l">每周回流增量占回归集比例</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据治理 -->
+    <div class="card">
+      <h2>数据保鲜与治理机制</h2>
+      <table class="tbl">
+        <tr><th>机制</th><th>内容</th><th>频率</th></tr>
+        <tr><td><strong>防泄漏筛查</strong></td><td>新模型发布后对评测集做污染检测（n-gram + 语义相似度），命中的题目降权或替换</td><td>每次接入新模型</td></tr>
+        <tr><td><strong>分布漂移监控</strong></td><td>对比线上流量分布与评测集分布（场景占比 / 长度 / 难度），偏差超阈值触发补采</td><td>月度</td></tr>
+        <tr><td><strong>样本轮换</strong></td><td>每季度替换 10~15% 低区分度样本（所有模型都得满分的「白给题」）</td><td>季度</td></tr>
+        <tr><td><strong>版本与快照</strong></td><td>评测集统一版本号管理，历史评测结果绑定数据集快照，保证结果可复现、可追溯</td><td>持续</td></tr>
+      </table>
+    </div>
+
+    <div class="pager">
+      <a href="01-metrics.html"><span>← 上一节点</span><b>① 评测指标体系</b></a>
+      <a class="next" href="03-automation.html"><span>下一节点 →</span><b>③ 自动化评测与回归</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

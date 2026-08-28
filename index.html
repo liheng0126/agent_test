@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大模型评测体系 · 架构总览</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 架构总览</div>
+      <h1>大模型评测架构体系 <span class="tag">LLM / Agent / 多模态</span></h1>
+      <p class="sub">面向 LLM、Agent 与多模态应用的一站式评测体系：以「指标标准 → 数据资产 → 自动化执行 → 分析归因 → 度量运营 → 发布治理」六位一体闭环，支撑模型、Prompt、Agent 策略与产品版本的全维度质量评测与持续回归。</p>
+    </div>
+
+    <!-- 核心能力 KPI -->
+    <div class="grid cols-4" style="margin-bottom:20px;">
+      <div class="mini-card kpi">
+        <div class="v" data-count="6" data-suffix=" 大">0 大</div>
+        <div class="l">核心能力节点，覆盖评测全生命周期</div>
+      </div>
+      <div class="mini-card kpi">
+        <div class="v" data-count="120" data-suffix="+">0+</div>
+        <div class="l">可量化评测指标（效果 / 体验 / 安全 / 成本）</div>
+      </div>
+      <div class="mini-card kpi">
+        <div class="v" data-count="85" data-suffix="%">0%</div>
+        <div class="l">评测执行自动化率，人工聚焦高价值判断</div>
+      </div>
+      <div class="mini-card kpi">
+        <div class="v" data-count="3" data-suffix=" 层">0 层</div>
+        <div class="l">回归防线：Commit 级 / 版本级 / 线上巡检</div>
+      </div>
+    </div>
+
+    <!-- 总体架构分层图 -->
+    <div class="card">
+      <h2>总体架构分层图（自下而上）</h2>
+      <div class="arch">
+        <div class="layer">
+          <div class="layer-name">L5 治理发布层<small>Release Governance</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="06-release-gate.html">上线门槛（Release Gate）</a></span>
+            <span class="node"><a href="06-release-gate.html">发布验收标准</a></span>
+            <span class="node dim">分级发布 / 灰度策略</span>
+            <span class="node dim">安全合规审计</span>
+            <span class="node dim">回滚熔断机制</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name">L4 度量运营层<small>Metrics &amp; Operation</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="05-dashboard.html">质量看板（Dashboard）</a></span>
+            <span class="node dim">效果 / 稳定性 / 成本 / 延迟 / 安全</span>
+            <span class="node dim">线上监控与告警</span>
+            <span class="node dim">评测 ROI 分析</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name">L3 分析归因层<small>Analysis</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="04-annotation.html">人工标注平台</a></span>
+            <span class="node"><a href="04-annotation.html">质量抽检</a></span>
+            <span class="node"><a href="04-annotation.html">误差分析与问题归因</a></span>
+            <span class="node dim">Bad Case 沉淀回流</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name">L2 执行引擎层<small>Eval Engine</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="03-automation.html">自动化评测流水线</a></span>
+            <span class="node"><a href="03-automation.html">规则 / 代码评测器</a></span>
+            <span class="node"><a href="03-automation.html">LLM-as-Judge</a></span>
+            <span class="node"><a href="03-automation.html">回归测试 &amp; 版本对比</a></span>
+            <span class="node dim">Agent 轨迹评测（Trajectory Eval）</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name">L1 数据资产层<small>Data Assets</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="02-benchmark.html">场景 Benchmark</a></span>
+            <span class="node"><a href="02-benchmark.html">Bad Case 库</a></span>
+            <span class="node dim">评测集构建（真实日志 / 合成 / 竞品）</span>
+            <span class="node dim">数据清洗与去重</span>
+            <span class="node dim">分层抽样管理</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name">L0 标准指标层<small>Metric Standard</small></div>
+          <div class="layer-body">
+            <span class="node"><a href="01-metrics.html">评测指标体系</a></span>
+            <span class="node dim">正确性 / 相关性 / 幻觉率</span>
+            <span class="node dim">工具调用成功率 / 安全风险</span>
+            <span class="node dim">体验抽象：延迟 / 稳定性 / 成本</span>
+          </div>
+        </div>
+      </div>
+      <div class="callout" style="margin:16px 0 0;">
+        💡 阅读方式：底部 L0 是「标尺」，L1 是「考卷」，L2 是「阅卷机」，L3 是「错题分析」，L4 是「成绩单」，L5 是「发榜门槛」。点击任意青色节点可进入该节点的详细建设方案。
+      </div>
+    </div>
+
+    <!-- 六大节点导航卡片 -->
+    <div class="card">
+      <h2>六大核心节点（点击进入详细方案）</h2>
+      <div class="grid cols-3">
+        <a class="mini-card" href="01-metrics.html" style="display:block;">
+          <h3><span class="icon">📏</span>① 评测指标体系</h3>
+          <p>为 LLM / Agent / 多模态定义四层指标树：能力指标、体验指标、安全指标、成本指标，把主观体验抽象为可测指标。</p>
+        </a>
+        <a class="mini-card" href="02-benchmark.html" style="display:block;">
+          <h3><span class="icon">🗂️</span>② Benchmark 与 Bad Case 库</h3>
+          <p>覆盖核心用户场景的分层 benchmark 体系 + 线上问题驱动的 bad case 回流库，持续保鲜机制。</p>
+        </a>
+        <a class="mini-card" href="03-automation.html" style="display:block;">
+          <h3><span class="icon">⚙️</span>③ 自动化评测与回归</h3>
+          <p>评测流水线 + 多种评测器（规则/模型/Judge），一键对比模型、Prompt、Agent 策略与产品版本。</p>
+        </a>
+        <a class="mini-card" href="04-annotation.html" style="display:block;">
+          <h3><span class="icon">👥</span>④ 人工标注与误差分析</h3>
+          <p>标注规范、多人背靠背标注、Kappa 一致性校验、质量抽检、误差分层归因与改进闭环。</p>
+        </a>
+        <a class="mini-card" href="05-dashboard.html" style="display:block;">
+          <h3><span class="icon">📊</span>⑤ 质量看板</h3>
+          <p>效果、稳定性、成本、延迟、安全五维一体的质量可视化，版本趋势对比与异常告警。</p>
+        </a>
+        <a class="mini-card" href="06-release-gate.html" style="display:block;">
+          <h3><span class="icon">🚦</span>⑥ 上线门槛与发布验收</h3>
+          <p>与 Agent / 平台 / 产品团队共建的分级上线门槛、验收清单、灰度放量与回滚标准。</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- 评测生命周期 -->
+    <div class="card">
+      <h2>评测生命周期闭环（Eval Loop）</h2>
+      <div class="flow">
+        <div class="stage"><div class="idx">1</div><b>定义标准</b><span>指标 + 门槛</span></div>
+        <div class="stage"><div class="idx">2</div><b>构建数据</b><span>评测集 + Bad Case</span></div>
+        <div class="stage"><div class="idx">3</div><b>自动评测</b><span>流水线批量执行</span></div>
+        <div class="stage"><div class="idx">4</div><b>人工校验</b><span>标注 + 抽检</span></div>
+        <div class="stage"><div class="idx">5</div><b>归因分析</b><span>误差分层定位</span></div>
+        <div class="stage"><div class="idx">6</div><b>看板度量</b><span>趋势 + 告警</span></div>
+        <div class="stage"><div class="idx">7</div><b>发布决策</b><span>门槛验收上线</span></div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-soft);margin-top:14px;">第 7 步上线后，线上回流日志与用户反馈将重新进入第 2 步（构建数据），形成<b style="color:var(--primary);">持续闭环</b>——评测体系不是一次性项目，而是与研发流程共生的基础设施。</p>
+    </div>
+
+    <!-- 角色协同 -->
+    <div class="card">
+      <h2>角色分工与协同（RACI）</h2>
+      <table class="tbl">
+        <tr><th>角色</th><th>核心职责</th><th>在评测体系中的位置</th></tr>
+        <tr>
+          <td><span class="pill t">评测团队</span></td>
+          <td>指标定义、评测集维护、评测平台建设、归因分析、发布验收</td>
+          <td>体系的 Owner，全流程主导（R/A）</td>
+        </tr>
+        <tr>
+          <td><span class="pill b">Agent / 平台团队</span></td>
+          <td>提供被测对象接入、策略实验、问题修复</td>
+          <td>被测方 + 门槛共制方（C）</td>
+        </tr>
+        <tr>
+          <td><span class="pill v">产品团队</span></td>
+          <td>定义核心用户场景、体验标准、上线取舍</td>
+          <td>场景输入 + 验收决策方（A）</td>
+        </tr>
+        <tr>
+          <td><span class="pill y">运营 / 客服</span></td>
+          <td>反馈线上 bad case、用户投诉、场景痛点</td>
+          <td>Bad Case 回流来源（C）</td>
+        </tr>
+        <tr>
+          <td><span class="pill g">标注团队</span></td>
+          <td>执行标注任务、参与校准与抽检</td>
+          <td>数据质量执行方（R）</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pager">
+      <a href="index.html"><span>当前页</span><b>◎ 架构总览</b></a>
+      <a class="next" href="01-metrics.html"><span>下一节点 →</span><b>① 评测指标体系</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>

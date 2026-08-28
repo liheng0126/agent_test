@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>① 评测指标体系 · 大模型评测体系</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo"><span class="dot"></span>LLM 评测体系</span>
+      <small>大模型评测研发架构 · v1.0</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">总览</div>
+      <a href="index.html"><span class="num">◎</span>体系架构总览</a>
+      <div class="nav-group">六大核心节点</div>
+      <a href="01-metrics.html"><span class="num">1</span>评测指标体系</a>
+      <a href="02-benchmark.html"><span class="num">2</span>Benchmark 与 Bad Case 库</a>
+      <a href="03-automation.html"><span class="num">3</span>自动化评测与回归</a>
+      <a href="04-annotation.html"><span class="num">4</span>人工标注与误差分析</a>
+      <a href="05-dashboard.html"><span class="num">5</span>质量看板</a>
+      <a href="06-release-gate.html"><span class="num">6</span>上线门槛与发布验收</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="crumb">首页 / 六大核心节点 / ① 评测指标体系</div>
+      <h1>① 评测指标体系 <span class="tag">L0 标准指标层</span></h1>
+      <p class="sub">对应职责「建立 LLM / Agent / 多模态应用的评测指标」：为所有被测对象建立统一、可量化、分优先级的指标树，核心原则是<b>把产品体验问题抽象成可测指标，而不是只做主观评价</b>。</p>
+    </div>
+
+    <div class="callout">
+      🎯 设计原则：<b>每个指标必须有明确定义、计算公式、数据来源、评测方式和目标值</b>。无法度量的指标不进入体系；只有主观判断的场景必须先通过标注校准转化为可测项。
+    </div>
+
+    <!-- 指标树 -->
+    <div class="card">
+      <h2>四层指标树（按评测维度划分）</h2>
+      <div class="arch">
+        <div class="layer">
+          <div class="layer-name" style="background:#0f766e;">能力指标<small>效果 Quality</small></div>
+          <div class="layer-body">
+            <span class="node">回答正确性（Accuracy）</span>
+            <span class="node">指令遵循率</span>
+            <span class="node">幻觉率（Hallucination Rate）</span>
+            <span class="node">引用可信度 / 事实一致性</span>
+            <span class="node blue">Agent：任务完成率（Success Rate）</span>
+            <span class="node blue">Agent：工具调用成功率</span>
+            <span class="node blue">Agent：规划合理性</span>
+            <span class="node violet">多模态：图文一致性</span>
+            <span class="node violet">多模态：OCR / 检测准确率</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#1d4ed8;">体验指标<small>Experience</small></div>
+          <div class="layer-body">
+            <span class="node">相关性（Relevance）</span>
+            <span class="node">完整性 / 结构化程度</span>
+            <span class="node">语言自然度 / 风格一致性</span>
+            <span class="node">上下文保持率（多轮遗忘）</span>
+            <span class="node">角色一致性（角色漂移率）</span>
+            <span class="node">首 Token 延迟 TTFT / 端到端延迟</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#b45309;">安全指标<small>Safety</small></div>
+          <div class="layer-body">
+            <span class="node">敏感内容拦截率</span>
+            <span class="node">越狱攻击防御成功率</span>
+            <span class="node">Prompt 注入防御率</span>
+            <span class="node">隐私泄露率（PII）</span>
+            <span class="node">价值观对齐合规率</span>
+            <span class="node warn">安全红线：一票否决项</span>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-name" style="background:#334155;">成本指标<small>Cost &amp; Stability</small></div>
+          <div class="layer-body">
+            <span class="node">单次请求 Token 成本</span>
+            <span class="node">单任务平均成本</span>
+            <span class="node">缓存命中率</span>
+            <span class="node">服务可用性 / 错误率</span>
+            <span class="node">输出稳定性（同题多次方差）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 指标定义示例 -->
+    <div class="card">
+      <h2>核心指标定义卡（示例）</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:12px;">每个指标在指标字典中以「定义卡」形式登记，保证跨团队口径一致：</p>
+      <table class="tbl">
+        <tr><th style="width:130px;">指标</th><th>计算口径</th><th>评测方式</th><th>优先级</th><th>参考目标值</th></tr>
+        <tr>
+          <td><strong>幻觉率</strong></td>
+          <td>存在虚构事实 / 与给定资料矛盾的回答数 ÷ 总回答数</td>
+          <td>LLM-as-Judge + 人工抽检校准</td>
+          <td><span class="pill r">P0</span></td>
+          <td>核心场景 ≤ 2%</td>
+        </tr>
+        <tr>
+          <td><strong>工具调用成功率</strong></td>
+          <td>参数合法且执行成功的工具调用次数 ÷ 工具调用总次数</td>
+          <td>轨迹日志自动解析（规则评测器）</td>
+          <td><span class="pill r">P0</span></td>
+          <td>≥ 98%</td>
+        </tr>
+        <tr>
+          <td><strong>Agent 任务完成率</strong></td>
+          <td>达到终态目标（含产物校验通过）的任务数 ÷ 总任务数</td>
+          <td>沙箱执行 + 结果断言</td>
+          <td><span class="pill r">P0</span></td>
+          <td>≥ 85%（按场景分档）</td>
+        </tr>
+        <tr>
+          <td><strong>上下文保持率</strong></td>
+          <td>多轮对话中正确继承前文约束的轮次数 ÷ 应继承轮次数</td>
+          <td>多轮评测集 + LLM-as-Judge</td>
+          <td><span class="pill y">P1</span></td>
+          <td>≥ 95%</td>
+        </tr>
+        <tr>
+          <td><strong>角色漂移率</strong></td>
+          <td>偏离人设约束的回答轮次 ÷ 总轮次</td>
+          <td>Judge 评分 + 人工仲裁</td>
+          <td><span class="pill y">P1</span></td>
+          <td>≤ 1%</td>
+        </tr>
+        <tr>
+          <td><strong>首 Token 延迟</strong></td>
+          <td>P50 / P90 / P99 分位的首包时间（ms）</td>
+          <td>网关埋点自动采集</td>
+          <td><span class="pill y">P1</span></td>
+          <td>P90 ≤ 2s</td>
+        </tr>
+        <tr>
+          <td><strong>图文一致性</strong></td>
+          <td>生成 / 理解结果与图像内容相符的比例</td>
+          <td>多模态 Judge + 人工抽检</td>
+          <td><span class="pill v">P1</span></td>
+          <td>≥ 92%</td>
+        </tr>
+        <tr>
+          <td><strong>单任务成本</strong></td>
+          <td>Σ(输入 Token 单价 × 输入量 + 输出 Token 单价 × 输出量) / 任务数</td>
+          <td>调用日志自动汇总（SQL）</td>
+          <td><span class="pill b">P2</span></td>
+          <td>环比不上升</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- 主观转客观方法论 -->
+    <div class="card">
+      <h2>方法论：如何把「体验问题」抽象成可测指标</h2>
+      <div class="grid cols-2">
+        <div>
+          <ol class="steps">
+            <li><strong>收集主观抱怨</strong>从用户反馈、客服工单、产品评审中收集原始体验描述，如「回复太啰嗦」「答非所问」。</li>
+            <li><strong>聚类归并</strong>将抱怨聚类为可命名的质量维度（冗余度、相关性、结构清晰度等）。</li>
+            <li><strong>给出可操作定义</strong>每个维度写出「什么算好、什么算差」的行为化描述与典型正反例。</li>
+            <li><strong>设计量表</strong>转化为 1-5 分李克特量表或二元判定，并配套锚定样例（anchor examples）。</li>
+            <li><strong>校准验证</strong>多人标注 → 计算一致性（Kappa）→ 修订规范 → 达标后进入指标字典，可交由 Judge 自动化执行。</li>
+          </ol>
+        </div>
+        <div>
+          <pre class="code"><span class="c"># 指标字典登记示例（YAML）</span>
+<span class="k">metric</span>: hallucination_rate
+<span class="k">name</span>: 幻觉率
+<span class="k">formula</span>: hallucinated / total_answers
+<span class="k">evaluator</span>: llm_judge_v3    <span class="c"># 自动评测器</span>
+<span class="k">human_audit_ratio</span>: 0.05    <span class="c"># 5% 人工抽检</span>
+<span class="k">dimension</span>: quality
+<span class="k">priority</span>: P0
+<span class="k">target</span>: "<=0.02"
+<span class="k">owner</span>: eval-team
+<span class="k">datasets</span>: [core_qa_v12, rag_faq_v5]
+
+<span class="c"># 判定 Prompt 要点（Judge 用）</span>
+<span class="c"># 1) 只依据 <provided_context> 判断</span>
+<span class="c"># 2) 输出 JSON: {verdict, evidence_span}</span>
+<span class="c"># 3) 不确定时输出 uncertain，不计入分母</span></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分对象指标矩阵 -->
+    <div class="card">
+      <h2>分被测对象的指标矩阵</h2>
+      <table class="tbl">
+        <tr><th>被测对象</th><th>必测指标组合</th><th>典型评测集</th></tr>
+        <tr>
+          <td><span class="pill t">基础 LLM</span></td>
+          <td>正确性、幻觉率、指令遵循、上下文保持、安全性、成本/延迟</td>
+          <td>通用能力集 + 业务问答集</td>
+        </tr>
+        <tr>
+          <td><span class="pill t">RAG 应用</span></td>
+          <td>检索召回率、引用可信度、忠实度（Faithfulness）、拒答正确率</td>
+          <td>RAG 场景集（含不可答问题）</td>
+        </tr>
+        <tr>
+          <td><span class="pill t">Agent</span></td>
+          <td>任务完成率、工具调用成功率、规划步数效率、轨迹合规性、失败恢复率</td>
+          <td>Agent 任务集 + 轨迹评测集</td>
+        </tr>
+        <tr>
+          <td><span class="pill t">多模态应用</span></td>
+          <td>图文一致性、OCR 准确率、图表理解正确率、跨模态幻觉率</td>
+          <td>多模态场景集（图/表/文档）</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pager">
+      <a href="index.html"><span>← 上一页</span><b>◎ 架构总览</b></a>
+      <a class="next" href="02-benchmark.html"><span>下一节点 →</span><b>② Benchmark 与 Bad Case 库</b></a>
+    </div>
+  </main>
+</div>
+<script src="assets/app.js"></script>
+</body>
+</html>
